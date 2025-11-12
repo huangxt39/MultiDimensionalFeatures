@@ -40,7 +40,7 @@ if args.include_only_first_k_sae_features:
     all_sae_features = all_sae_features[: args.include_only_first_k_sae_features]
 
 
-def spectral_cluster_sims(all_sims, n_clusters=1000):
+def spectral_cluster_sims(all_sims, n_clusters=13):
     sc = SpectralClustering(n_clusters=n_clusters, affinity="precomputed")
     labels = sc.fit_predict(all_sims).tolist()
     clusters = [[] for _ in range(n_clusters)]

@@ -10,6 +10,7 @@ import os
 import time
 import pickle
 import argparse
+import re
 
 # hopefully this will help with memory fragmentation
 os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "max_split_size_mb:128"
@@ -68,22 +69,9 @@ def main(args):
     args (argparse.Namespace): Command line arguments
     """
 
-    # SAE_CLUSTER_DIR = "/om/user/ericjm/results/saes/reconstructions-gpt2-1/clusters/"
-    # SAE_HIDDENS_DIR = "/om/user/ericjm/results/saes/reconstructions-gpt2-2/hiddens/"
-    # FIGURE_SAVE_DIR = os.path.join(
-    #     "/om/user/ericjm/results/saes/reconstructions-gpt2-2/cluster_figures/",
-    #     f"layer{args.layer}",
-    #     f"nclusters{args.n_clusters:04d}",
-    # )
-    # FIGURE_SAVE_DIR_IMGS = os.path.join(
-    #     "/om/user/ericjm/results/saes/reconstructions-gpt2-2/cluster_figures_imgs/",
-    #     f"layer{args.layer}",
-    #     f"nclusters{args.n_clusters:04d}",
-    # )
-    # os.makedirs(FIGURE_SAVE_DIR, exist_ok=True)
-    # os.makedirs(FIGURE_SAVE_DIR_IMGS, exist_ok=True)
-    save_dir = f"{BASE_DIR}{args.save_dir}"
-    os.makedirs(save_dir, exist_ok=True)
+    layer, n_cluster = re.search(r"layer_(\d+)_clusters_.*_n(\d+)\.pkl", args.clusters_file).groups() # gpt-2_layer_5_clusters_spectral_n11.pkl
+    layer, n_cluster = int(layer), int(n_cluster)
+    os.makedirs(args.save_dir, exist_ok=True)
 
     ae = get_gpt2_sae(device="cpu", layer=args.layer)
     decoder_vecs = ae.W_dec.data.cpu().numpy()
@@ -102,7 +90,7 @@ def main(args):
         print(f"Cluster {args.cluster} has too many features ({len(cluster)}), exiting.")
         exit()
 
-    sparse_sae_activations = np.load(f"{BASE_DIR}gpt-2/{args.activations_file}")
+    sparse_sae_activations = np.load(args.activations_file)
 
     reconstructions, token_indices = get_cluster_activations(sparse_sae_activations, set(cluster), decoder_vecs)
     reconstructions, token_indices = reconstructions[:args.sample_limit], token_indices[:args.sample_limit]
@@ -166,20 +154,18 @@ def main(args):
                     #   subplot_titles_font=dict(size=8))  # Adjust the subplot title font size here
     fig.update_annotations(font_size=13)
 
-    fig.write_html(os.path.join(save_dir, f"gpt2-layer{args.layer}-cluster{args.cluster}.html"))
-    fig.write_image(os.path.join(save_dir, f"gpt2-layer{args.layer}-cluster{args.cluster}.png"))
+    fig.write_html(os.path.join(args.save_dir, f"gpt2-layer{args.layer}-cluster{args.cluster}.html"))
+    fig.write_image(os.path.join(args.save_dir, f"gpt2-layer{args.layer}-cluster{args.cluster}.png"))
         
     pickle.dump((reconstructions_pca, contexts, pca.explained_variance_ratio_), open(f"data/gpt2-layer{args.layer}-cluster{args.cluster}.pkl", "wb"))
     
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(description="Create cluster figure")
-    parser.add_argument("--layer", type=int, help="Layer of GPT-2", default=5)
     parser.add_argument("--clusters_file", type=str, help="File containing clusters", default="gpt-2_layer_5_clusters_spectral_n11.pkl")
-    parser.add_argument("--cluster", type=int, help="Cluster index to create plot of", default=0) # 138 is days, 251 is months
     parser.add_argument("--activations_file", type=str, help="File containing SAE activations (occurence_data)",
-                        default="sae_activations_big_layer-5.npz")
-    parser.add_argument("--size_limit", type=int, help="Size limit for the cluster", default=1e7)
+                        default="sae_activations_big_layer-7.npz")
+    parser.add_argument("--size_limit", type=int, help="Size limit for the cluster", default=1000)
     parser.add_argument("--sample_limit", type=int, help="Max number of reconstructions in plot", default=20_000)
     parser.add_argument("--save_dir", type=str, help="Directory to save figures", default="panes")
     args = parser.parse_args()
