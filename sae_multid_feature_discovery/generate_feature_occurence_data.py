@@ -190,4 +190,6 @@ for ae, layer in zip(aes, layers_to_evaluate):
     os.makedirs(os.path.dirname(output_file), exist_ok=True)
 
     save_coocurring_sae_features(model, ae, output_file, data)
-å
+
+# rsync -avhu /scratch/xhuang/MultiDimensionalFeatures/jae/gpt-2/  SIC:/home/xhuang/MultiDimensionalFeatures/jae/gpt-2/
+

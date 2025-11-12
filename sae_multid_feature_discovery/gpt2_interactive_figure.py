@@ -46,7 +46,7 @@ def get_cluster_activations(sparse_sae_activations, sae_neurons_in_cluster, deco
         sparse_sae_activations["sparse_sae_values"],
         sparse_sae_activations["sparse_sae_indices"],
         sparse_sae_activations["all_token_indices"],
-    ), total = len(sparse_sae_activations["sparse_sae_values"]), disable=True):
+    ), total = len(sparse_sae_activations["sparse_sae_values"]), disable=False):
         if current_token == None:
             current_token = token_index
             current_activations = np.zeros(768)
