@@ -38,7 +38,7 @@ if args.model_name == "mistral":
 else:
     # GPT hyperparameters
     model_name = "gpt-2"
-    layers_to_evaluate = range(12)
+    layers_to_evaluate = [5, 7, 9, 10]
     batch_size = 64
     num_devices = 1
     num_workers = 8
