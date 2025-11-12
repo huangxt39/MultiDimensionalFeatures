@@ -136,12 +136,8 @@ def save_coocurring_sae_features(model, ae, output_file, data):
         all_activation_norms.append(np.array(activation_norms.cpu()))
 
         activations = activations.to(device)
-        forward_pass = ae.forward(activations)
-        if isinstance(forward_pass, tuple):
-            hidden_sae = forward_pass[1]
-        else:
-            hidden_sae = forward_pass.feature_acts
-
+        hidden_sae = ae.encode(activations)
+        print("--> size", hidden_sae.size())
         nonzero_sae = hidden_sae.abs() > 1e-6
         nonzero_sae_values = hidden_sae[nonzero_sae]
         nonzero_sae_indices = nonzero_sae.nonzero(
