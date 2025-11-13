@@ -3,7 +3,8 @@ intervention/figs
 multi_dim_features
 sae_multid_feature_discovery/saes/mistral_saes
 *.npz
-
+jae/*
+clusters/*
 # venv
 multid
 

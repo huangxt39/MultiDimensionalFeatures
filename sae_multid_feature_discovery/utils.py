@@ -1,7 +1,12 @@
 from huggingface_hub import hf_hub_download
 import os
 
+
 BASE_DIR = "/scratch/xhuang/MultiDimensionalFeatures/jae/"
+if not os.path.exists(BASE_DIR):
+    BASE_DIR = "/home/xhuang/MultiDimensionalFeatures/jae/"
+if not os.path.exists(BASE_DIR):
+    BASE_DIR = "/Users/huangxt/MultiDimensionalFeatures/jae/"
 
 def get_gpt2_sae(device, layer):
     from sae_lens import SAE
