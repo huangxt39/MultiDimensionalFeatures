@@ -7,7 +7,7 @@ jae/*
 clusters/*
 # venv
 multid
-
+run.sh
 *.pdf
 *.png
 

@@ -71,7 +71,10 @@ def get_cluster_activations(sparse_sae_activations, sae_neurons_in_cluster, deco
             updated = True
             current_activations += sae_value * decoder_vecs[sae_index]
     pbar.close()
-    return torch.stack(all_activations), all_token_indices
+    if all_activations:
+        return torch.stack(all_activations), all_token_indices
+    else:
+        return all_activations, all_token_indices
 
 def get_R(args, clusters_file, layer):
     
@@ -104,9 +107,13 @@ def get_R(args, clusters_file, layer):
     R_config = []
     for i, (cluster, cluster_size, avg_cos_sim) in enumerate(clusters_with_order):
         print("new cluster", i, cluster_size, avg_cos_sim)
-
-        reconstructions, token_indices = get_cluster_activations(sparse_sae_activations, set(cluster), decoder_vecs, args.sample_limit)
-
+        if cluster_size < 4:
+            print("too small, skip")
+            continue
+        reconstructions, _ = get_cluster_activations(sparse_sae_activations, set(cluster), decoder_vecs, args.sample_limit)
+        if len(reconstructions) == 0:
+            print("no reconstructions, skip")
+            continue
         # rm variance in previous saved basis
         if R.size(0) > 0:
             reconstructions -= reconstructions @ R.T @ R
@@ -118,6 +125,10 @@ def get_R(args, clusters_file, layer):
         reconstructions -= reconstructions.mean(dim=0, keepdim=True)
         U, S, Vh = torch.linalg.svd(reconstructions)
         print("max singular val", S[0].item())
+        if S[0].item() < 1e-6:
+            print("variance already taken by prev subspaces, skip")
+            continue
+
         thr = S[0] * rtol
         num_comp = (S > thr).sum().item()
         new_basis = Vh[: num_comp]
