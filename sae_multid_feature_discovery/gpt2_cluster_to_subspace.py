@@ -197,7 +197,7 @@ if __name__ == '__main__':
                 clusters_file = f"gpt-2_layer_{layer}_clusters_{cluster_config}.pkl"
                 R, R_config = get_R(args, cluster_dir / clusters_file, layer)
                 layer_to_R[layer] = (R, R_config)
-                if len(R_config) > args.max_n_subspace:
+                if len(R_config) > args.max_n_subspace or len(R_config) < 5:
                     break
 
             if all(5 <= len(layer_to_R[layer][1]) <= args.max_n_subspace for layer in layer_to_R):
