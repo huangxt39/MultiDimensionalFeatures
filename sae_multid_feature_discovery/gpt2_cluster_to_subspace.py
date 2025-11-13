@@ -126,7 +126,7 @@ def get_R(args, clusters_file, layer):
         R_config.append(num_comp)
         print("new R size", R.size())
 
-        if R.size(0) == R.size(1):
+        if R.size(0) == R.size(1) or len(R_config) == args.max_n_subspace:
             break
 
         # print("imple diff", (Vh[: num_comp] - torch.from_numpy(sklearn_results)[: num_comp]).abs().mean())
@@ -151,6 +151,7 @@ if __name__ == '__main__':
     parser.add_argument("--sample_limit", type=int, help="Max number of reconstructions in plot", default=20_000)
     parser.add_argument("--rtol", type=float, help="relative threshold for computing the rank", default=0.01)
     parser.add_argument("--order_by", type=str, help="order cluster by", default="avg_sim", choices=["avg_sim", "size"])
+    parser.add_argument("--max_n_subspace", type=int, help="maximum num of subspaces we want", default=50)
     args = parser.parse_args()
 
     convert_config = f"order_by-{args.order_by}-rtol-{args.rtol}"
@@ -176,14 +177,19 @@ if __name__ == '__main__':
 
         if keep_config:
             print(cluster_config)
+            save_dir = root_save_dir / f"gpt2-sae_feature-cluster_cfg-{cluster_config}-{convert_config}"
+            if save_dir.exists():
+                print("skip: already exists")
+                continue
             layer_to_R = {}
             for layer in layers:
                 clusters_file = f"gpt-2_layer_{layer}_clusters_{cluster_config}.pkl"
                 R, R_config = get_R(args, cluster_dir / clusters_file, layer)
                 layer_to_R[layer] = (R, R_config)
+                if len(R_config) > args.max_n_subspace:
+                    break
 
-            if all(5 <= len(layer_to_R[layer][1]) <= 50 for layer in layers):
-                save_dir = root_save_dir / f"gpt2-sae_feature-cluster_cfg-{cluster_config}-{convert_config}"
+            if all(5 <= len(layer_to_R[layer][1]) <= args.max_n_subspace for layer in layer_to_R):
                 if not save_dir.exists():
                     save_dir.mkdir()
                 for layer in layers:
@@ -196,4 +202,4 @@ if __name__ == '__main__':
                     torch.save({"R.parametrizations.weight.0.base": R}, save_dir / f"R-gpt2-x{layer-1}.post.pt")
                 print("subspaces saved at", str(save_dir))
             else:
-                print("skip", cluster_config, convert_config, "\t num subspaces:", [len(layer_to_R[layer][1]) for layer in layers])
+                print("skip: num subspace out of bound", cluster_config, convert_config, "\t num subspaces:", [len(layer_to_R[layer][1]) for layer in layers])
