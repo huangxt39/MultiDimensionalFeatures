@@ -213,4 +213,4 @@ if __name__ == '__main__':
                     torch.save({"R.parametrizations.weight.0.base": R}, save_dir / f"R-gpt2-x{layer-1}.post.pt")
                 print("subspaces saved at", str(save_dir))
             else:
-                print("skip: num subspace out of bound", cluster_config, convert_config, "\t num subspaces:", [len(layer_to_R[layer][1]) for layer in layers])
+                print("skip: num subspace out of bound", cluster_config, convert_config, "\t num subspaces:", [len(layer_to_R[layer][1]) for layer in layer_to_R])
